@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Set Page Color Popup</title>
+    <style>
+    body {
+      overflow: hidden;
+      margin: 0px;
+      padding: 0px;
+      background: white;
+    }
+
+    div:first-child {
+      margin-top: 0px;
+    }
+	.btn{
+		margin: 5px;
+		
+	}
+	textarea{
+		font-size: 12px !important;
+		font-family: monospace !important;
+		font-weight: bold !important;
+		color: #666 !important !important;
+		margin: 5px !important;
+	}
+    </style>
+	<link href="bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    <script src="popup.js"></script>
+  </head>
+  <body style='width:700px;height:400px;'>
+	<!--form class='form-inline'-->
+		<div class=''>
+			<button id='btn' class="btn btn-success" type='button'>Package</button>
+			<div class="checkbox" style='display:inline-block'>
+				<label>
+				  <input type="checkbox" id='withVersion' > Full
+				</label>
+			 </div>
+		</div>
+    <div>
+		<textarea id='output' class="form-control" rows="20" cols="400">Please navigate to inbound change set detail page and click the above button.</textarea>
+	</div>
+	 <!--/form-->
+  </body>
+</html>

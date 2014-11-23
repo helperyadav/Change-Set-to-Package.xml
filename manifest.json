@@ -1,0 +1,20 @@
+{
+  "name": "ANT package generator",
+  "description": "Generates package.xml out of change set",
+  "version": "0.0.1",
+  "permissions": [
+    "tabs", "http://*/*", "https://*/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://*.salesforce.com/033*", "https://*.salesforce.com/changemgmt/inboundChangeSetDetailPage.apexp?*"],
+      "js": [ "jquery.js","package.js"]
+    }
+  ],
+  "browser_action": {
+      "default_title": "create ant package",
+      "default_icon": "icon1.png",
+      "default_popup": "popup.html"
+  },
+  "manifest_version": 2
+}
