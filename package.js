@@ -3,15 +3,17 @@ window.setTimeout(function(){
 }, 500);
 
 function getPackage(){
+  
   chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 	console.log('mssg: ' + message.param);
 	var URL = document.location.href;
 	
-	var table;
 	if( URL.indexOf('/033') != -1 ){
 		table = document.getElementsByClassName('list')[0];
 	}else if( URL.indexOf('changemgmt/inboundChangeSetDetailPage') != -1 ){
 		table = $('table[id$="component_list_table"]').get(0);
+	}else if( URL.indexOf('changemgmt/outboundChangeSetDetailPage') != -1 ){
+		table = $('table[id$="OutboundChangeSetComponentList"]').get(0);
 	}
 
 	json = xmlToJson(table);

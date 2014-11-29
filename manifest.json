@@ -1,13 +1,20 @@
 {
   "name": "ANT package generator",
   "description": "Generates package.xml out of change set",
-  "version": "0.0.1",
+  "version": "1",
   "permissions": [
-    "tabs", "http://*/*", "https://*/*"
+		"cookies", 
+		"tabs", 
+		"https://*.salesforce.com/033*", 
+		"https://*.salesforce.com/changemgmt/outboundChangeSetDetailPage.apexp?*", 
+		"https://*.salesforce.com/changemgmt/inboundChangeSetDetailPage.apexp?*"
   ],
   "content_scripts": [
     {
-      "matches": ["https://*.salesforce.com/033*", "https://*.salesforce.com/changemgmt/inboundChangeSetDetailPage.apexp?*"],
+      "matches": [	"https://*.salesforce.com/033*", 
+					"https://*.salesforce.com/changemgmt/outboundChangeSetDetailPage.apexp?*", 
+					"https://*.salesforce.com/changemgmt/inboundChangeSetDetailPage.apexp?*"
+				],
       "js": [ "jquery.js","package.js"]
     }
   ],
