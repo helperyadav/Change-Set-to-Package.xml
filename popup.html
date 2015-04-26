@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Set Page Color Popup</title>
+    <title>SFDC Magic Toolkit</title>
     <style>
     body {
       overflow: hidden;
@@ -31,16 +31,12 @@
   <body style='width:700px;height:400px;'>
 	<!--form class='form-inline'-->
 		<div class=''>
-			<button id='btn' class="btn btn-success" type='button'>Package</button>
-			<div class="checkbox" style='display:inline-block'>
-				<label>
-				  <input type="checkbox" id='withVersion' > Full
-				</label>
-			 </div>
+			<button id='btn' class="btn btn-success" type='button' title='Goto Inbound/Outbound change set page and click.'>Package</button>
+			<button id='testcoveragebtn' class="btn btn-success" type='button' title='Click to get list of test coverage.'>Test Coverage</button>
 			 <img id='loading' src='./ajax-loader.gif' style='margin-left:20px;display:none;'/>
 		</div>
     <div>
-		<textarea id='output' class="form-control" rows="20" cols="400">Please navigate to inbound/outbound change set detail page and click the above button.</textarea>
+		<textarea id='output' class="form-control" rows="20" cols="400">Please navigate to inbound/outbound change set detail page and click the package button.</textarea>
 	</div>
 	 <!--/form-->
   </body>

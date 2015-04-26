@@ -1,27 +1,28 @@
 {
-  "name": "ANT package generator",
-  "description": "Generates package.xml out of change set",
-  "version": "1",
+  "name": "SFDC Magic Toolkit",
+  "description": "This tool-kit will provide simple but effective solutions for the issues which you feel as a SFDC User.",
+  "version": "1.0.2",
   "permissions": [
 		"cookies", 
 		"tabs", 
-		"https://*.salesforce.com/033*", 
-		"https://*.salesforce.com/changemgmt/outboundChangeSetDetailPage.apexp?*", 
-		"https://*.salesforce.com/changemgmt/inboundChangeSetDetailPage.apexp?*"
+		"https://*.salesforce.com/*"
+		
   ],
   "content_scripts": [
     {
-      "matches": [	"https://*.salesforce.com/033*", 
-					"https://*.salesforce.com/changemgmt/outboundChangeSetDetailPage.apexp?*", 
-					"https://*.salesforce.com/changemgmt/inboundChangeSetDetailPage.apexp?*"
+      "matches": [	"https://*.salesforce.com/*"
 				],
       "js": [ "jquery.js","package.js"]
     }
   ],
   "browser_action": {
-      "default_title": "create ant package",
-      "default_icon": "icon1.png",
+      "default_title": "SFDC Magic Toolkit",
       "default_popup": "popup.html"
   },
+  "icons": { 
+		"16": "images/icon16.png",
+        "48": "images/icon48.png",
+        "128": "images/icon128.png" },
+		  
   "manifest_version": 2
 }

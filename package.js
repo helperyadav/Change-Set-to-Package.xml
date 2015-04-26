@@ -1,6 +1,25 @@
 window.setTimeout(function(){
 	getPackage();
+	goToUserDetailPageDirectly();
 }, 500);
+
+function goToUserDetailPageDirectly(){
+	
+	$("a[href*='/005']")
+	.each(function()
+	{
+		
+		if (this.href.indexOf("?noredirect=1") == -1)
+		{
+			if(this.href.indexOf("?") == -1)
+				this.href = this.href + "?noredirect=1";
+			else 
+				this.href = this.href + "&noredirect=1";
+		}
+	});
+	
+	
+}
 
 function getPackage(){
   
@@ -14,11 +33,14 @@ function getPackage(){
 		table = $('table[id$="component_list_table"]').get(0);
 	}else if( URL.indexOf('changemgmt/outboundChangeSetDetailPage') != -1 ){
 		table = $('table[id$="OutboundChangeSetComponentList"]').get(0);
+	}else{
+		sendResponse({'json':'Something went wrong. Try again after reloading the page. If problem persists then contact bhupendrasyadav@gmail.com'});
+		return;
 	}
 
 	json = xmlToJson(table);
 	sendResponse({'json':json});
-	$('a[id$="nextPageLink"]').click();
+	//$('a[id$="nextPageLink"]').click();
   });
 }
 

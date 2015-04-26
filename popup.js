@@ -16,7 +16,9 @@ var PG = {
 	toolingservice:{
 		'customField': '/services/data/v28.0/tooling/sobjects/CustomField',
 		'workflowrule' : '/services/data/v30.0/tooling/sobjects/workflowrule',
-		'workflowfieldupdate': '/services/data/v32.0/tooling/sobjects/workflowfieldupdate'
+		'workflowfieldupdate': '/services/data/v32.0/tooling/sobjects/workflowfieldupdate',
+		'coverage' : '/services/data/v29.0/tooling/query/?q=SELECT+Coverage+FROM+ApexCodeCoverageAggregate',
+
 	},
 	
 	init : function(){
@@ -30,8 +32,24 @@ var PG = {
 		});
 	},
 
-	clicked : function (e){
+	resetVariables : function(){
+		PG.ApexClasses = [];
+		PG.ApexTriggers = [];
+		PG.CustomFields =  [];
+		PG.Groups =  [];
+		PG.CustomSettings  =  [];
+		PG.ApexPages  =  [];
+		PG.workflowrules =  [];
+		PG.workflowfieldupdates =  [];
+		PG.pagelayouts =  [];
+		PG.queues = [];
+	},
+	
+	
+	handleGetPackage : function (e){
 		document.getElementById('loading').style.display = 'inline-block';
+		PG.resetVariables();
+		
 		chrome.tabs.sendMessage(
 			PG.tab.id,
 			{'request':'GET'}, 
@@ -194,10 +212,8 @@ var PG = {
 	/* Generic for all pages */
 	generatePackage : function (){
 		var package = '';
-		if( document.getElementById('withVersion').checked ){
 			package += '<?xml version="1.0" encoding="UTF-8"?>\n';
 			package += '<Package xmlns="http://soap.sforce.com/2006/04/metadata">\n';
-		}
 		if( PG.ApexClasses.length > 0 ){
 			package += '<type>\n';
 			for( var i = 0; i < PG.ApexClasses.length; i++){
@@ -289,10 +305,9 @@ var PG = {
 			package += '</type>\n';
 		}
 		
-		if( document.getElementById('withVersion').checked ){
 			package += '<version>30.0</version>\n';
 			package += '</package>';
-		}
+		
 		document.getElementById('output').value = package;
 		console.log( package );
 		document.getElementById('loading').style.display = 'none';
@@ -306,6 +321,7 @@ var PG = {
 					for(i=0;i<cookie.length;i++){
 						if(cookie[i].name = 'sid' && cookie[i].session == true && cookie[i].secure == true){
 							PG.session = cookie[i].value;
+							document.getElementById('output').innerHTML = PG.session;
 						}
 					}
 				});
@@ -315,12 +331,124 @@ var PG = {
 
 }
 
+/*** Code Coverage Provider **/
+var CCP = {
+	clsssNamesLoaded : false,
+	triggerNamesLoaded : false,
+	classNames: {}, 
+	triggerNames : {},
+	triggerCoverage: {},
+	apexclassCoverage: {},
+	
+	EndPoint :{
+		'apexclasses': '/services/data/v29.0/query/?q=select+name,Id+from+apexclass+WHERE+NamespacePrefix+=+null',
+		'apextriggeres': '/services/data/v29.0/query/?q=select+name,Id+from+apextrigger+WHERE+NamespacePrefix+=+null',
+		'coverage' : '/services/data/v29.0/tooling/query/?q=SELECT+Coverage,ApexClassOrTriggerId+FROM+ApexCodeCoverageAggregate',
+	},
+	
+	handleGetCoverage : function(e){
+		document.getElementById('loading').style.display = 'inline-block';
+		CCP.loadClasses();
+		CCP.loadTrigger();
+		CCP.loadCoverage();
+	},
+	
+	loadTrigger : function(){
+		var toolingCoverageEndPoint = PG.baseURL + CCP.EndPoint.apextriggeres;
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET", toolingCoverageEndPoint , true);
+		xhr.setRequestHeader("Content-type","application/json");
+		xhr.setRequestHeader("Authorization", "Bearer " + PG.session);
+		xhr.onreadystatechange = function(x) {
+			if (x.currentTarget.readyState == 4 && x.currentTarget.status == 200 ) {
+				var triggerResp = JSON.parse(x.currentTarget.responseText);
+				console.log( triggerResp );
+				if( triggerResp.done == true ){
+					CCP.triggerNames = {};
+					for( var index = 0 ; index < triggerResp.records.length; index++ ){
+						var trig = triggerResp.records[index];
+						CCP.triggerNames[trig.Id] = trig.Name;
+					}
+					console.table( CCP.triggerNames );
+					CCP.triggerNamesLoaded = true;
+					CCP.loadCoverage();
+				}
+			}
+		};
+		xhr.send();
+	},
+	
+	loadClasses : function(){
+		var toolingCoverageEndPoint = PG.baseURL + CCP.EndPoint.apexclasses;
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET", toolingCoverageEndPoint , true);
+		xhr.setRequestHeader("Content-type","application/json");
+		xhr.setRequestHeader("Authorization", "Bearer " + PG.session);
+		xhr.onreadystatechange = function(x) {
+			if (x.currentTarget.readyState == 4 && x.currentTarget.status == 200 ) {
+				triggerResp = JSON.parse(x.currentTarget.responseText);
+				console.log( triggerResp );
+				if( triggerResp.done == true ){
+					CCP.classNames = [];
+					for( var index = 0 ; index < triggerResp.records.length; index++ ){
+						var cls = triggerResp.records[index];
+						CCP.classNames[cls.Id] = cls.Name;
+					}
+					console.table( CCP.classNames );
+					CCP.clsssNamesLoaded = true;
+					CCP.loadCoverage();
+				}
+			}
+		};
+		xhr.send();
+	},
+
+	loadCoverage : function(){
+		if( CCP.clsssNamesLoaded == false || CCP.triggerNamesLoaded == false )
+			return;
+		
+		var toolingCoverageEndPoint = PG.baseURL + CCP.EndPoint.coverage;
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET", toolingCoverageEndPoint , true);
+		xhr.setRequestHeader("Content-type","application/json");
+		xhr.setRequestHeader("Authorization", "Bearer " + PG.session);
+		xhr.onreadystatechange = function(x) {
+			if (x.currentTarget.readyState == 4 && x.currentTarget.status == 200 ) {
+				var coverage = JSON.parse(x.currentTarget.responseText);
+				console.log( coverage );
+				if( coverage.done == true ){
+					var lstcoverage = [];
+					for( var index = 0 ; index < coverage.records.length; index++ ){
+						var cov = coverage.records[index];
+						var covered = cov.Coverage.coveredLines.length;
+						var uncovered = cov.Coverage.uncoveredLines.length;
+						
+						var percentage = Math.round ( ( covered *100 ) / (uncovered + covered) );
+						var id = cov.ApexClassOrTriggerId;
+						var name = CCP.triggerNames[id] || CCP.classNames[id];
+						lstcoverage.push( {'classname' : name, 'percentage' : percentage } );
+					}
+					console.table( lstcoverage );
+					CCP.generateCoverage(lstcoverage);
+				}
+			}
+		};
+		xhr.send();
+	},
+	
+	generateCoverage : function (lstcoverage){
+		var coverage = '';
+		for(var index = 0; index < lstcoverage.length; index++){
+			coverage += lstcoverage[index].classname + ', ' + lstcoverage[index].percentage + '%\n';
+		}
+		document.getElementById('output').innerHTML = coverage;
+		document.getElementById('loading').style.display = 'none';
+	}
+}
 
 document.addEventListener('DOMContentLoaded', function () {
   PG.init();
+  document.getElementById('btn').addEventListener('click', PG.handleGetPackage );
+  document.getElementById('testcoveragebtn').addEventListener( 'click', CCP.handleGetCoverage );
 
-  var divs = document.querySelectorAll('button');
-  for (var i = 0; i < divs.length; i++) {
-    divs[i].addEventListener('click', PG.clicked);
-  }
 });
