@@ -18,9 +18,9 @@ var PG = {
 		'workflowrule' : '/services/data/v30.0/tooling/sobjects/workflowrule',
 		'workflowfieldupdate': '/services/data/v32.0/tooling/sobjects/workflowfieldupdate',
 		'coverage' : '/services/data/v29.0/tooling/query/?q=SELECT+Coverage+FROM+ApexCodeCoverageAggregate',
-
+		
 	},
-	
+
 	init : function(){
 		chrome.tabs.query( {active:true}, function callback(tabs){
 		  PG.tab = tabs[0];
@@ -28,10 +28,11 @@ var PG = {
 		  PG.isInboundChangeSet = PG.tab.url.indexOf('changemgmt/inboundChangeSetDetailPage') != -1;
 		  PG.isOutboundChangeSet = PG.tab.url.indexOf('changemgmt/outboundChangeSetDetailPage') != -1;
 		  PG.isUnmanagedPackage = PG.tab.url.indexOf('/033') != -1;
+		  PG.isSalesforceSite = PG.tab.url.indexOf('salesforce.com') != -1;
 		  PG.sessionId = PG.getSessionId();
 		});
 	},
-
+	
 	resetVariables : function(){
 		PG.ApexClasses = [];
 		PG.ApexTriggers = [];
@@ -47,6 +48,10 @@ var PG = {
 	
 	
 	handleGetPackage : function (e){
+		if(!PG.isSalesforceSite){
+			document.getElementById('output').innerHTML = 'Please navigate to inbound/outbound ChangeSet page to generate package.xml';
+			return;
+		}
 		document.getElementById('loading').style.display = 'inline-block';
 		PG.resetVariables();
 		
@@ -59,7 +64,7 @@ var PG = {
 						document.getElementById('loading').style.display = 'none';
 						return;
 				}
-				document.getElementById('output').innerHTML = JSON.stringify(response.json);
+				//document.getElementById('output').innerHTML = JSON.stringify(response.json);
 				
 				if( PG.isUnmanagedPackage ){
 					PG.extractComponentsFromUnmanagedPackage(response);
@@ -305,8 +310,8 @@ var PG = {
 			package += '</type>\n';
 		}
 		
-			package += '<version>30.0</version>\n';
-			package += '</package>';
+		package += '<version>30.0</version>\n';
+		package += '</package>';
 		
 		document.getElementById('output').value = package;
 		console.log( package );
@@ -347,6 +352,11 @@ var CCP = {
 	},
 	
 	handleGetCoverage : function(e){
+		if(!PG.isSalesforceSite){
+			document.getElementById('output').innerHTML = 'Please navigate to salesforce to generate Code coverage.';
+			return;
+		}
+		
 		document.getElementById('loading').style.display = 'inline-block';
 		CCP.loadClasses();
 		CCP.loadTrigger();
@@ -450,5 +460,5 @@ document.addEventListener('DOMContentLoaded', function () {
   PG.init();
   document.getElementById('btn').addEventListener('click', PG.handleGetPackage );
   document.getElementById('testcoveragebtn').addEventListener( 'click', CCP.handleGetCoverage );
-
+  
 });

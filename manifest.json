@@ -5,14 +5,16 @@
   "permissions": [
 		"cookies", 
 		"tabs", 
-		"https://*.salesforce.com/*"
+		"https://*.salesforce.com/*",
+		"https://*.force.com/*"
 		
   ],
   "content_scripts": [
     {
-      "matches": [	"https://*.salesforce.com/*"
+      "matches": [	"https://*.salesforce.com/*",
+					"https://*.visual.force.com/*"
 				],
-      "js": [ "jquery.js","package.js"]
+      "js": [ "jquery.js","SFDCToolkitContentScript.js"]
     }
   ],
   "browser_action": {
