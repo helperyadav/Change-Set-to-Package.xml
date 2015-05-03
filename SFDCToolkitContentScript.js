@@ -18,7 +18,6 @@ function goToUserDetailPageDirectly(){
 		}
 	});
 	
-	
 }
 
 function getPackage(){
@@ -50,7 +49,6 @@ function getPackage(){
 function isBlank(obj){
     return (obj.replace(/[\s\n]*/g , '').length == 0);
 }
-
 
 // Changes XML to JSON
 function xmlToJson(xml) {

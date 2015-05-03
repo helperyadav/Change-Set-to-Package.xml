@@ -1,7 +1,5 @@
 {
   "name": "SFDC Magic Toolkit",
-  "description": "This tool-kit will provide simple but effective solutions for the issues which you feel as a SFDC User.",
-  "version": "1.0.2",
   "permissions": [
 		"cookies", 
 		"tabs", 
