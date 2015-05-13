@@ -70,8 +70,8 @@ var PG = {
 			PG.tab.id,
 			{'request':'GET'}, 
 			function(response){
-				if( response === undefined ){
-						document.getElementById('output').value = 'Something went wrong. Try again after reloading the page. If problem persists then contact bhupendrasyadav@gmail.com';
+				if( response === undefined || response.status == 'failed' ){
+						document.getElementById('output').value = response.json || 'Something went wrong. Try again after reloading the page. If problem persists then contact bhupendrasyadav@gmail.com';
 						document.getElementById('loading').style.display = 'none';
 						return;
 				}
