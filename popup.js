@@ -1,20 +1,20 @@
 
 var PG = {
-	ApexClasses : [],
-	ApexTriggers : [],
-	CustomFields : [],
-	Groups :[],
-	CustomSettings : [],
-	ApexPages : [],
-	workflowrules : [],
-	workflowfieldupdates : [],
-	WorkflowEmailAlert: [],
-	pagelayouts : [],
-	queues : [],
-	StaticResource:[],
-	ValidationRule : [],
-	HomePageComponent :[],
-	HomePageLayout: [],
+	ApexClasses : {},
+	ApexTriggers : {},
+	CustomFields : {},
+	Groups :{},
+	CustomSettings : {},
+	ApexPages : {},
+	workflowrules : {},
+	workflowfieldupdates : {},
+	WorkflowEmailAlert: {},
+	pagelayouts : {},
+	queues : {},
+	StaticResource:{},
+	ValidationRule : {},
+	HomePageComponent :{},
+	HomePageLayout: {},
 	
 	tab : null,
 	baseURL : null,
@@ -40,31 +40,34 @@ var PG = {
 	},
 	
 	resetVariables : function(){
-		PG.HomePageLayout = [];
-		PG.HomePageComponent = [];
-		PG.ValidationRule = [];
-		PG.StaticResource = [];
-		PG.ApexClasses = [];
-		PG.ApexTriggers = [];
-		PG.CustomFields =  [];
-		PG.Groups =  [];
-		PG.CustomSettings  =  [];
-		PG.ApexPages  =  [];
-		PG.workflowrules =  [];
-		PG.workflowfieldupdates =  [];
-		PG.WorkflowEmailAlert = [];
-		PG.pagelayouts =  [];
-		PG.queues = [];
+		PG.HomePageLayout = {};
+		PG.HomePageComponent = {};
+		PG.ValidationRule = {};
+		PG.StaticResource = {};
+		PG.ApexClasses = {};
+		PG.ApexTriggers = {};
+		PG.CustomFields =  {};
+		PG.Groups =  {};
+		PG.CustomSettings  =  {};
+		PG.ApexPages  =  {};
+		PG.workflowrules =  {};
+		PG.workflowfieldupdates =  {};
+		PG.WorkflowEmailAlert = {};
+		PG.pagelayouts =  {};
+		PG.queues = {};
 	},
 	
-	
-	handleGetPackage : function (e){
+	packageHandler: function(e){
 		if(!PG.isSalesforceSite){
 			document.getElementById('output').value = 'Please navigate to inbound/outbound ChangeSet page to generate package.xml';
 			return;
 		}
-		document.getElementById('loading').style.display = 'inline-block';
 		PG.resetVariables();
+		PG.handleGetPackage(e);
+	},
+	
+	handleGetPackage : function (e){
+		document.getElementById('loading').style.display = 'inline-block';
 		
 		chrome.tabs.sendMessage(
 			PG.tab.id,
@@ -75,7 +78,6 @@ var PG = {
 						document.getElementById('loading').style.display = 'none';
 						return;
 				}
-				//document.getElementById('output').value = JSON.stringify(response.json);
 				
 				if( PG.isUnmanagedPackage ){
 					PG.extractComponentsFromUnmanagedPackage(response);
@@ -84,35 +86,20 @@ var PG = {
 				}else if( PG.isOutboundChangeSet ){
 					PG.extractComponentsFromOutboundChangeSet(response);
 				}
+				
+				if(response.status == 'In Progress'){
+					window.setTimeout(function(){
+						PG.handleGetPackage();
+					}, 5000);
+				}else {
+					document.getElementById('loading').style.display = 'none';
+				}
 			}
 		);
 	},
 	
 	extractComponentsFromInboundChangeSet : function (response){
 		PG.extractComponentsFromOutboundChangeSet(response);
-		/*if( response.json.TBODY != undefined && response.json.TBODY.TR != undefined){
-			for(var i=0; i < response.json.TBODY.TR.length; i++ ){
-				var tr = response.json.TBODY.TR[i];
-				var type = tr.TD[3];
-				if( type['text'] == 'Custom Field' ){
-					var name = tr.TD[4].text;
-					PG.CustomFields.push( '<members>' + name + '</members>' );
-				}else if( type['text'] == 'Apex Class' ){
-					var name = tr.TD[4].text;
-					PG.ApexClasses.push( '<members>' + name + '</members>' );
-				}else if( type['text'] == 'Apex Trigger' ){
-					var name = tr.TD[4].text;
-					PG.ApexTriggers.push( '<members>' + name + '</members>' );
-				}else if( type['text'] == 'Custom Setting' || type['text'] == 'Custom Object' || type['text'] == 'Custom Setting Definition'){
-					var name = tr.TD[4].text;
-					PG.CustomSettings.push( '<members>' + name + '__c' + '</members>' );
-				}else if( type['text'] == 'Visualforce Page' ){
-					var name = tr.TD[4].text;
-					PG.ApexPages.push( '<members>' + name + '</members>' );
-				}
-			}
-			PG.generatePackage();
-		}*/
 	},
 	/* 					Outbound changeset */
 	extractComponentsFromOutboundChangeSet : function (response){
@@ -124,7 +111,7 @@ var PG = {
 				if( type['text'] == 'Custom Field' ){
 					// change set was uploaded. Hence easy to get API names.
 					if( tr.TD[0].A !== undefined && tr.TD[0].A.text.indexOf('View Source') != -1 ){
-						PG.CustomFields.push( '<members>' + tr.TD[4].text + '</members>' );
+						PG.CustomFields[tr.TD[4].text] = '<members>' + tr.TD[4].text + '</members>';
 					}else{
 						xhrCounter++;
 						var toolingcustomfield = PG.baseURL + PG.toolingservice.customField + tr.TD[1].A.attributes.href;
@@ -137,7 +124,7 @@ var PG = {
 							if (x.currentTarget.readyState == 4 && x.currentTarget.status == 200 ) {
 								var apiName = JSON.parse(x.currentTarget.responseText).FullName;
 								console.log( apiName );
-								PG.CustomFields.push( '<members>' + apiName + '</members>' );
+								PG.CustomFields[apiName] =  '<members>' + apiName + '</members>' ;
 								
 								xhrCounter--;
 								if( xhrCounter == 0 )
@@ -149,28 +136,28 @@ var PG = {
 					
 				}else if( type['text'] == 'Apex Class' ){
 					var name = tr.TD[4].text;
-					PG.ApexClasses.push( '<members>' + name + '</members>' );
+					PG.ApexClasses[name] = '<members>' + name + '</members>' ;
 				}else if( type['text'] == 'Apex Trigger' ){
 					var name = tr.TD[4].text;
-					PG.ApexTriggers.push( '<members>' + name + '</members>' );
+					PG.ApexTriggers[name] = '<members>' + name + '</members>' ;
 				}else if( type['text'] == 'Group' ){
 					var name = tr.TD[4].text;
-					PG.Groups.push( '<members>' + name + '</members>' );
+					PG.Groups[name] = '<members>' + name + '</members>' ;
 				}else if( type['text'] == 'Custom Setting' || type['text'] == 'Custom Object' || type['text'] == 'Custom Setting Definition'){
 					var name = tr.TD[4].text;
-					PG.CustomSettings.push( '<members>' + name + '__c' + '</members>' );
+					PG.CustomSettings[name] = '<members>' + name + '__c' + '</members>' ;
 				}else if( type['text'] == 'Visualforce Page' ){
 					var name = tr.TD[4].text;
-					PG.ApexPages.push( '<members>' + name + '</members>' );
+					PG.ApexPages[name] = '<members>' + name + '</members>';
 				}else if( type['text'] == 'Page Layout' ){
 					var name = tr.TD[4].text;
-					PG.pagelayouts.push( '<members>' + name + '</members>' );
+					PG.pagelayouts[name] = '<members>' + name + '</members>' ;
 				}else if( type['text'] == 'Queue' ){
 					var name = tr.TD[4].text;
-					PG.queues.push( '<members>' + name + '</members>' );
+					PG.queues[name] = '<members>' + name + '</members>' ;
 				}else if( type['text'] == 'Workflow Rule' ){
 					if( tr.TD[0].A !== undefined && tr.TD[0].A.text.indexOf('View Source') != -1 ){
-						PG.workflowrules.push( '<members>' + tr.TD[4].text + '</members>' );
+						PG.workflowrules[tr.TD[4].text] =  '<members>' + tr.TD[4].text + '</members>' ;
 					}else{
 						xhrCounter++;
 						var toolingcustomfield = PG.baseURL + PG.toolingservice.workflowrule + tr.TD[1].A.attributes.href;
@@ -183,7 +170,7 @@ var PG = {
 							if (x.currentTarget.readyState == 4 && x.currentTarget.status == 200 ) {
 								var apiName = JSON.parse(x.currentTarget.responseText).FullName;
 								console.log( apiName );
-								PG.workflowrules.push( '<members>' + apiName + '</members>' );
+								PG.workflowrules[apiName] = '<members>' + apiName + '</members>' ;
 								
 								xhrCounter--;
 								if( xhrCounter == 0 )
@@ -195,7 +182,7 @@ var PG = {
 				}else if( type['text'] == 'Workflow Field Update' ){
 			
 					if( tr.TD[0].A !== undefined && tr.TD[0].A.text.indexOf('View Source') != -1 ){
-						PG.workflowfieldupdates.push( '<members>' + tr.TD[4].text + '</members>' );
+						PG.workflowfieldupdates[ tr.TD[4].text] = '<members>' + tr.TD[4].text + '</members>';
 					}else{
 						xhrCounter++;
 						var toolingcustomfield = PG.baseURL + PG.toolingservice.workflowfieldupdate + tr.TD[1].A.attributes.href;
@@ -208,7 +195,7 @@ var PG = {
 							if (x.currentTarget.readyState == 4 && x.currentTarget.status == 200 ) {
 								var apiName = JSON.parse(x.currentTarget.responseText).FullName;
 								console.log( apiName );
-								PG.workflowfieldupdates.push( '<members>' + apiName + '</members>' );
+								PG.workflowfieldupdates[apiName] =  '<members>' + apiName + '</members>';
 								
 								xhrCounter--;
 								if( xhrCounter == 0 )
@@ -219,7 +206,7 @@ var PG = {
 					}
 				}else if( type['text'] == 'Workflow Email Alert' ){
 					if( tr.TD[0].A !== undefined && tr.TD[0].A.text.indexOf('View Source') != -1 ){
-						PG.WorkflowEmailAlert.push( '<members>' + tr.TD[4].text + '</members>' );
+						PG.WorkflowEmailAlert[tr.TD[4].text] = '<members>' + tr.TD[4].text + '</members>' ;
 					}
 					
 				}else if( type['text'] == 'Static Resource' ){
@@ -227,7 +214,7 @@ var PG = {
 					PG.StaticResource.push( '<members>' + name + '</members>' );
 				}else if(type['text'] == 'Validation Rule' ){
 					if( tr.TD[0].A !== undefined && tr.TD[0].A.text.indexOf('View Source') != -1 ){
-						PG.ValidationRule.push( '<members>' + tr.TD[4].text + '</members>' );
+						PG.ValidationRule[tr.TD[4].text]  = '<members>' + tr.TD[4].text + '</members>';
 					}else{
 						xhrCounter++;
 						var toolingcustomfield = PG.baseURL + PG.toolingservice.validationRule + "'" +tr.TD[4].text + "'";
@@ -240,7 +227,7 @@ var PG = {
 							if (x.currentTarget.readyState == 4 && x.currentTarget.status == 200 ) {
 								var apiName = JSON.parse(x.currentTarget.responseText).records[0].FullName;
 								console.log( apiName );
-								PG.ValidationRule.push( '<members>' + apiName + '</members>' );
+								PG.ValidationRule[apiName] =  '<members>' + apiName + '</members>';
 								
 								xhrCounter--;
 								if( xhrCounter == 0 )
@@ -251,11 +238,11 @@ var PG = {
 					}
 				}else if(type['text'] == 'Home Page Component'){
 					var name = tr.TD[4].text;
-					PG.HomePageComponent.push( '<members>' + name + '</members>' );
+					PG.HomePageComponent[name] = '<members>' + name + '</members>' ;
 				
 				}else if(type['text'] == 'Home Page Layout'){
 					var name = tr.TD[4].text;
-					PG.HomePageLayout.push( '<members>' + name + '</members>' );
+					PG.HomePageLayout[name] = '<members>' + name + '</members>' ;
 				}
 			}
 			if( xhrCounter == 0 )
@@ -273,10 +260,10 @@ var PG = {
 					var name = tr.TD[2].A.text;
 				}else if( type['text'] == 'Apex Class' ){
 					var name = tr.TD[2].A.text;
-					PG.ApexClasses.push( '<members>' + name + '</members>' );
+					PG.ApexClasses[name] =  '<members>' + name + '</members>' ;
 				}else if( type['text'] == 'Apex Trigger' ){
 					var name = tr.TD[2].A.text;
-					PG.ApexTriggers.push( '<members>' + name + '</members>' );
+					PG.ApexTriggers[name] = '<members>' + name + '</members>' ;
 				}
 			}
 			PG.generatePackage();
@@ -290,134 +277,134 @@ var PG = {
 			package += '<Package xmlns="http://soap.sforce.com/2006/04/metadata">\n';
 		
 		
-		if( PG.HomePageLayout.length > 0 ){
+		if( Object.keys(PG.HomePageLayout).length > 0 ){
 			package += '<type>\n';
-			for( var i = 0; i < PG.HomePageLayout.length; i++){
+			for( i in PG.HomePageLayout ){
 				package += '\t' + PG.HomePageLayout[i] + '\n';
 			}
 			package += '\t<name>HomePageLayout</name>\n';
 			package += '</type>\n';
 		}
 		
-		if( PG.HomePageComponent.length > 0 ){
+		if( Object.keys(PG.HomePageComponent).length > 0 ){
 			package += '<type>\n';
-			for( var i = 0; i < PG.HomePageComponent.length; i++){
+			for( i in PG.HomePageComponent ){
 				package += '\t' + PG.HomePageComponent[i] + '\n';
 			}
 			package += '\t<name>HomePageComponent</name>\n';
 			package += '</type>\n';
 		}
 		
-		if( PG.StaticResource.length > 0 ){
+		if( Object.keys(PG.StaticResource).length > 0 ){
 			package += '<type>\n';
-			for( var i = 0; i < PG.StaticResource.length; i++){
+			for( i in PG.StaticResource){
 				package += '\t' + PG.StaticResource[i] + '\n';
 			}
 			package += '\t<name>StaticResource</name>\n';
 			package += '</type>\n';
 		}
 		
-		if( PG.ValidationRule.length > 0 ){
+		if( Object.keys(PG.ValidationRule).length > 0 ){
 			package += '<type>\n';
-			for( var i = 0; i < PG.ValidationRule.length; i++){
+			for( i in PG.ValidationRule ){
 				package += '\t' + PG.ValidationRule[i] + '\n';
 			}
 			package += '\t<name>ValidationRule</name>\n';
 			package += '</type>\n';
 		}
 		
-		if( PG.ApexClasses.length > 0 ){
+		if( Object.keys(PG.ApexClasses).length > 0 ){
 			package += '<type>\n';
-			for( var i = 0; i < PG.ApexClasses.length; i++){
+			for( i in PG.ApexClasses ){
 				package += '\t' + PG.ApexClasses[i] + '\n';
 			}
 			package += '\t<name>ApexClass</name>\n';
 			package += '</type>\n';
 		}
 		
-		if( PG.ApexPages.length > 0 ){
+		if( Object.keys(PG.ApexPages).length > 0 ){
 			package += '<type>\n';
-			for( var i = 0; i < PG.ApexPages.length; i++){
+			for( i in PG.ApexPages ){
 				package += '\t' + PG.ApexPages[i] + '\n';
 			}
 			package += '\t<name>ApexPage</name>\n';
 			package += '</type>\n';
 		}
 		
-		if( PG.ApexTriggers.length > 0 ){
+		if( Object.keys(PG.ApexTriggers).length > 0 ){
 			package += '<type>\n';
-			for( var i = 0; i < PG.ApexTriggers.length; i++){
+			for( i in  PG.ApexTriggers ){
 				package += '\t' + PG.ApexTriggers[i] + '\n';
 			}
 			package += '\t<name>ApexTrigger</name>\n';
 			package += '</type>\n';
 		}
 		
-		if( PG.CustomFields.length > 0 ){
+		if( Object.keys(PG.CustomFields).length > 0 ){
 			package += '<type>\n';
-			for( var i = 0; i < PG.CustomFields.length; i++){
+			for( i in PG.CustomFields){
 				package += '\t' + PG.CustomFields[i] + '\n';
 			}
 			package += '\t<name>CustomField</name>\n';
 			package += '</type>\n';
 		}
 		
-		if( PG.CustomSettings.length > 0 ){
+		if( Object.keys(PG.CustomSettings).length > 0 ){
 			package += '<type>\n';
-			for( var i = 0; i < PG.CustomSettings.length; i++){
+			for( i in PG.CustomSettings){
 				package += '\t' + PG.CustomSettings[i] + '\n';
 			}
 			package += '\t<name>CustomObject</name>\n';
 			package += '</type>\n';
 		}
 		
-		if( PG.Groups.length > 0 ){
+		if( Object.keys(PG.Groups).length > 0 ){
 			package += '<type>\n';
-			for( var i = 0; i < PG.Groups.length; i++){
+			for( i in PG.Groups){
 				package += '\t' + PG.Groups[i] + '\n';
 			}
 			package += '\t<name>Group</name>\n';
 			package += '</type>\n';
 		}
 		
-		if( PG.workflowrules.length > 0 ){
+		if( Object.keys(PG.workflowrules).length > 0 ){
 			package += '<type>\n';
-			for( var i = 0; i < PG.workflowrules.length; i++){
+			for( i in PG.workflowrules){
 				package += '\t' + PG.workflowrules[i] + '\n';
 			}
 			package += '\t<name>WorkflowRule</name>\n';
 			package += '</type>\n';
 		}
 		
-		if( PG.workflowfieldupdates.length > 0 ){
+		if( Object.keys(PG.workflowfieldupdates).length > 0 ){
 			package += '<type>\n';
-			for( var i = 0; i < PG.workflowfieldupdates.length; i++){
+			for( i in PG.workflowfieldupdates){
 				package += '\t' + PG.workflowfieldupdates[i] + '\n';
 			}
 			package += '\t<name>WorkflowFieldUpdate</name>\n';
 			package += '</type>\n';
 		}
-		if( PG.WorkflowEmailAlert.length > 0 ){
+		if( Object.keys(PG.WorkflowEmailAlert).length > 0 ){
 			package += '<type>\n';
-			for( var i = 0; i < PG.WorkflowEmailAlert.length; i++){
+			for( i in PG.WorkflowEmailAlert){
 				package += '\t' + PG.WorkflowEmailAlert[i] + '\n';
 			}
 			package += '\t<name>WorkflowEmailAlert</name>\n';
 			package += '</type>\n';
 		}
 		
-		if( PG.pagelayouts.length > 0 ){
+		if( Object.keys(PG.pagelayouts).length > 0 ){
 			package += '<type>\n';
-			for( var i = 0; i < PG.pagelayouts.length; i++){
+			for( i in PG.pagelayouts){
 				package += '\t' + PG.pagelayouts[i] + '\n';
 			}
 			package += '\t<name>Layout</name>\n';
 			package += '</type>\n';
 		}
 		
-		if( PG.queues.length > 0 ){
+		if( Object.keys(PG.queues).length > 0 ){
 			package += '<type>\n';
-			for( var i = 0; i < PG.queues.length; i++){
+			for(i in PG.queues){
 				package += '\t' + PG.queues[i] + '\n';
 			}
 			package += '\t<name>Queue</name>\n';
@@ -425,11 +412,11 @@ var PG = {
 		}
 		
 		package += '<version>30.0</version>\n';
-		package += '</package>';
+		package += '</Package>';
 		
 		document.getElementById('output').value = package;
 		console.log( package );
-		document.getElementById('loading').style.display = 'none';
+		//document.getElementById('loading').style.display = 'none';
 	},
 	
 	getSessionId : function(){
@@ -575,7 +562,7 @@ var CCP = {
 
 document.addEventListener('DOMContentLoaded', function () {
   PG.init();
-  document.getElementById('btn').addEventListener('click', PG.handleGetPackage );
+  document.getElementById('btn').addEventListener('click', PG.packageHandler );
   document.getElementById('testcoveragebtn').addEventListener( 'click', CCP.handleGetCoverage );
   
 });

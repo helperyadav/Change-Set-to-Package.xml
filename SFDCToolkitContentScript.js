@@ -59,7 +59,16 @@ function getPackage(){
 	}
 
 	json = xmlToJson(table);
-	sendResponse({'status': 'done', 'json':json});
+	var a = $('a[id$="nextPageLink"]');
+	
+	if( a.length == 0 ){
+		sendResponse({'status': 'done', 'json':json});
+	}else
+		sendResponse({'status': 'In Progress', 'json':json});
+	
+	if( a.length != 0 ){
+		a[0].click();
+	}
   });
 }
 
