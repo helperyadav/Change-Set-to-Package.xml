@@ -2,7 +2,47 @@ window.setTimeout(function(){
 	getPackage();
 	goToUserDetailPageDirectly();
 	putButtonOnDevConsole();
+	enableMassFLS();
 }, 500);
+
+function enableMassFLS(){
+	if(window.location.href.indexOf( '/e?s=ObjectsAndTabs' ) != -1 && window.location.href.indexOf('salesforce.com/00e')){
+		console.log( 'Profile edit FLS page detected.');
+		
+		// FLS Alow mass Read
+		$('<input type="checkbox" title="-By SFDC Magic Toolkit" style="background-color:blue"></input>')
+			.prependTo($('div[id*="fls_readheader"]'))
+			.click(function(){
+				if( $(this).is(':checked') ){
+					$('input[id$="fls_read_ck"]:enabled').prop('checked', true);
+				}else{
+					$('input[id$="fls_read_ck"]:enabled').removeAttr('checked');
+				}
+			});
+		
+		// FLS allow mass Edit
+		$('<input type="checkbox" title="-By SFDC Magic Toolkit"> </input>')
+			.prependTo($('div[id*="fls_editheader"]'))
+			.click(function(){
+				if( $(this).is(':checked') ){
+					$('input[id$="fls_edit_ck"]:enabled').prop('checked', true);
+				}else{
+					$('input[id$="fls_edit_ck"]:enabled').removeAttr('checked');
+				}
+			});
+		
+		// Enable Object CRUD
+		$('<input type="checkbox" title="-By SFDC Magic Toolkit" ></input>')
+			.prependTo($('div[id*="olp_valueheader"]'))
+			.click(function(){
+				if( $(this).is(':checked') ){
+					$('input[id$="olp_check"]:enabled').prop('checked', true);
+				}else{
+					$('input[id$="olp_check"]:enabled').removeAttr('checked');
+				}
+			});
+	}
+}
 
 function putButtonOnDevConsole(){
 	if(window.location.href.indexOf( 'apex/debug/ApexCSIPage' ) != -1 ){

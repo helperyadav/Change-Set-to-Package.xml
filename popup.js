@@ -145,7 +145,7 @@ var PG = {
 					PG.Groups[name] = '<members>' + name + '</members>' ;
 				}else if( type['text'] == 'Custom Setting' || type['text'] == 'Custom Object' || type['text'] == 'Custom Setting Definition'){
 					var name = tr.TD[4].text;
-					PG.CustomSettings[name] = '<members>' + name + '__c' + '</members>' ;
+					PG.CustomSettings[name] = '<members>' + name + ( name.match(/__c$/) ? '' : '__c') + '</members>' ;
 				}else if( type['text'] == 'Visualforce Page' ){
 					var name = tr.TD[4].text;
 					PG.ApexPages[name] = '<members>' + name + '</members>';
@@ -211,7 +211,7 @@ var PG = {
 					
 				}else if( type['text'] == 'Static Resource' ){
 					var name = tr.TD[4].text;
-					PG.StaticResource.push( '<members>' + name + '</members>' );
+					PG.StaticResource[name] = '<members>' + name + '</members>';
 				}else if(type['text'] == 'Validation Rule' ){
 					if( tr.TD[0].A !== undefined && tr.TD[0].A.text.indexOf('View Source') != -1 ){
 						PG.ValidationRule[tr.TD[4].text]  = '<members>' + tr.TD[4].text + '</members>';
@@ -555,6 +555,9 @@ var CCP = {
 		for(var index = 0; index < lstcoverage.length; index++){
 			coverage += lstcoverage[index].classname + ', ' + lstcoverage[index].percentage + '%\n';
 		}
+		$('<div>Copy-Paste below CSV data or  <a href="'+ encodeURI("data:text/csv;charset=utf-8," + coverage)+'" download="' +'coverage.csv">click to Download</a> file.</div>')
+			.prependTo( $('#output').parent() );
+
 		document.getElementById('output').value = coverage;
 		document.getElementById('loading').style.display = 'none';
 	}
