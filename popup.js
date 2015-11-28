@@ -15,6 +15,12 @@ var PG = {
 	ValidationRule : {},
 	HomePageComponent :{},
 	HomePageLayout: {},
+	CustomTab:{},
+	Flow:{},
+	WebLink:{},
+	ApprovalProcess:{},
+	ListView:{},
+	EmailTemplate:{},
 	
 	tab : null,
 	baseURL : null,
@@ -53,6 +59,12 @@ var PG = {
 		PG.workflowrules =  {};
 		PG.workflowfieldupdates =  {};
 		PG.WorkflowEmailAlert = {};
+		PG.EmailTemplate = {};
+		PG.ListView={};
+		PG.ApprovalProcess={};
+		PG.CustomTab = {};
+		PG.Flow = {};
+		PG.WebLink = {};
 		PG.pagelayouts =  {};
 		PG.queues = {};
 	},
@@ -207,6 +219,36 @@ var PG = {
 				}else if( type['text'] == 'Workflow Email Alert' ){
 					if( tr.TD[0].A !== undefined && tr.TD[0].A.text.indexOf('View Source') != -1 ){
 						PG.WorkflowEmailAlert[tr.TD[4].text] = '<members>' + tr.TD[4].text + '</members>' ;
+					}
+					
+				}else if( type['text'] == 'Email Template' ){
+					if( tr.TD[0].A !== undefined && tr.TD[0].A.text.indexOf('View Source') != -1 ){
+						PG.EmailTemplate[tr.TD[4].text] = '<members>' + tr.TD[4].text + '</members>' ;
+					}
+					
+				}else if( type['text'] == 'List View' ){
+					if( tr.TD[0].A !== undefined && tr.TD[0].A.text.indexOf('View Source') != -1 ){
+						PG.ListView[tr.TD[4].text] = '<members>' + tr.TD[4].text + '</members>' ;
+					}
+					
+				}else if( type['text'] == 'Approval Process' ){
+					if( tr.TD[0].A !== undefined && tr.TD[0].A.text.indexOf('View Source') != -1 ){
+						PG.ApprovalProcess[tr.TD[4].text] = '<members>' + tr.TD[4].text + '</members>' ;
+					}
+					
+				}else if( type['text'] == 'Button or Link' ){
+					if( tr.TD[0].A !== undefined && tr.TD[0].A.text.indexOf('View Source') != -1 ){
+						PG.WebLink[tr.TD[4].text] = '<members>' + tr.TD[4].text + '</members>' ;
+					}
+					
+				}else if( type['text'] == 'Flow Version' ){
+					if( tr.TD[0].A !== undefined && tr.TD[0].A.text.indexOf('View Source') != -1 ){
+						PG.Flow[tr.TD[4].text] = '<members>' + tr.TD[4].text + '</members>' ;
+					}
+					
+				}else if( type['text'] == 'Tab' ){
+					if( tr.TD[0].A !== undefined && tr.TD[0].A.text.indexOf('View Source') != -1 ){
+						PG.CustomTab[tr.TD[4].text] = '<members>' + tr.TD[4].text + '</members>' ;
 					}
 					
 				}else if( type['text'] == 'Static Resource' ){
@@ -384,12 +426,66 @@ var PG = {
 			package += '\t<name>WorkflowFieldUpdate</name>\n';
 			package += '</type>\n';
 		}
+		
 		if( Object.keys(PG.WorkflowEmailAlert).length > 0 ){
 			package += '<type>\n';
 			for( i in PG.WorkflowEmailAlert){
 				package += '\t' + PG.WorkflowEmailAlert[i] + '\n';
 			}
 			package += '\t<name>WorkflowEmailAlert</name>\n';
+			package += '</type>\n';
+		}
+		
+		if( Object.keys(PG.EmailTemplate).length > 0 ){
+			package += '<type>\n';
+			for( i in PG.EmailTemplate){
+				package += '\t' + PG.EmailTemplate[i] + '\n';
+			}
+			package += '\t<name>EmailTemplate</name>\n';
+			package += '</type>\n';
+		}
+		
+		if( Object.keys(PG.ListView).length > 0 ){
+			package += '<type>\n';
+			for( i in PG.ListView){
+				package += '\t' + PG.ListView[i] + '\n';
+			}
+			package += '\t<name>ListView</name>\n';
+			package += '</type>\n';
+		}
+		
+		if( Object.keys(PG.ApprovalProcess).length > 0 ){
+			package += '<type>\n';
+			for( i in PG.ApprovalProcess){
+				package += '\t' + PG.ApprovalProcess[i] + '\n';
+			}
+			package += '\t<name>ApprovalProcess</name>\n';
+			package += '</type>\n';
+		}
+		
+		if( Object.keys(PG.WebLink).length > 0 ){
+			package += '<type>\n';
+			for( i in PG.WebLink){
+				package += '\t' + PG.WebLink[i] + '\n';
+			}
+			package += '\t<name>WebLink</name>\n';
+			package += '</type>\n';
+		}
+		if( Object.keys(PG.Flow).length > 0 ){
+			package += '<type>\n';
+			for( i in PG.Flow){
+				package += '\t' + PG.Flow[i] + '\n';
+			}
+			package += '\t<name>Flow</name>\n';
+			package += '</type>\n';
+		}
+		
+		if( Object.keys(PG.CustomTab).length > 0 ){
+			package += '<type>\n';
+			for( i in PG.CustomTab){
+				package += '\t' + PG.CustomTab[i] + '\n';
+			}
+			package += '\t<name>CustomTab</name>\n';
 			package += '</type>\n';
 		}
 		
@@ -411,7 +507,7 @@ var PG = {
 			package += '</type>\n';
 		}
 		
-		package += '<version>30.0</version>\n';
+		package += '<version>35.0</version>\n';
 		package += '</Package>';
 		
 		document.getElementById('output').value = package;
