@@ -75,7 +75,34 @@ var PG = {
 			return;
 		}
 		PG.resetVariables();
-		PG.handleGetPackage(e);
+		if(PG.isOutboundChangeSet){
+			//try to use MetaData wsdl, fallback on exception.
+			try{
+				document.getElementById('loading').style.display = 'inline-block';
+			
+				chrome.tabs.sendMessage(
+					PG.tab.id,
+					{'request':'GET_CS_NAME'}, 
+					function(response){
+						if( response === undefined || response.status == 'failed' ){
+								document.getElementById('output').value = response.json || 'Something went wrong. Try again after reloading the page. If problem persists then contact bhupendrasyadav@gmail.com';
+								document.getElementById('loading').style.display = 'none';
+								return;
+						}
+						
+						if(response.status == 'done'){
+							MetaData.retrieve(response.csName);
+						}else{
+							PG.handleGetPackage(e);
+						}
+				});
+			}catch(ex){
+				PG.handleGetPackage(e);
+			}
+			
+		}else{
+			PG.handleGetPackage(e);
+		}
 	},
 	
 	handleGetPackage : function (e){
@@ -135,7 +162,7 @@ var PG = {
 						xhr.onreadystatechange = function(x) {
 							if (x.currentTarget.readyState == 4 && x.currentTarget.status == 200 ) {
 								var apiName = JSON.parse(x.currentTarget.responseText).FullName;
-								console.log( apiName );
+								//console.log( apiName );
 								PG.CustomFields[apiName] =  '<members>' + apiName + '</members>' ;
 								
 								xhrCounter--;
@@ -181,7 +208,7 @@ var PG = {
 						xhr.onreadystatechange = function(x) {
 							if (x.currentTarget.readyState == 4 && x.currentTarget.status == 200 ) {
 								var apiName = JSON.parse(x.currentTarget.responseText).FullName;
-								console.log( apiName );
+								//console.log( apiName );
 								PG.workflowrules[apiName] = '<members>' + apiName + '</members>' ;
 								
 								xhrCounter--;
@@ -206,7 +233,7 @@ var PG = {
 						xhr.onreadystatechange = function(x) {
 							if (x.currentTarget.readyState == 4 && x.currentTarget.status == 200 ) {
 								var apiName = JSON.parse(x.currentTarget.responseText).FullName;
-								console.log( apiName );
+								//console.log( apiName );
 								PG.workflowfieldupdates[apiName] =  '<members>' + apiName + '</members>';
 								
 								xhrCounter--;
@@ -268,7 +295,7 @@ var PG = {
 						xhr.onreadystatechange = function(x) {
 							if (x.currentTarget.readyState == 4 && x.currentTarget.status == 200 ) {
 								var apiName = JSON.parse(x.currentTarget.responseText).records[0].FullName;
-								console.log( apiName );
+								//console.log( apiName );
 								PG.ValidationRule[apiName] =  '<members>' + apiName + '</members>';
 								
 								xhrCounter--;
@@ -511,7 +538,7 @@ var PG = {
 		package += '</Package>';
 		
 		document.getElementById('output').value = package;
-		console.log( package );
+		//console.log( package );
 		//document.getElementById('loading').style.display = 'none';
 	},
 	
@@ -656,6 +683,104 @@ var CCP = {
 
 		document.getElementById('output').value = coverage;
 		document.getElementById('loading').style.display = 'none';
+	}
+}
+
+var MetaData = {
+	endPoint : '/services/Soap/m/35.0',
+	retrieve : function(csName){
+		var reqBody = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:met="http://soap.sforce.com/2006/04/metadata">'+
+						'   <soapenv:Header>'+
+						'      <met:CallOptions>'+
+						'         <met:client>1</met:client>'+
+						'      </met:CallOptions>'+
+						'      <met:SessionHeader>'+
+						'         <met:sessionId>'+ PG.session  + '</met:sessionId>'+
+						'      </met:SessionHeader>'+
+						'   </soapenv:Header>'+
+						'   <soapenv:Body>'+
+						'      <met:retrieve>'+
+						'         <met:retrieveRequest>'+
+						'            <met:apiVersion>34.0</met:apiVersion>'+
+						'            <met:packageNames>'+ csName +'</met:packageNames>'+
+						'            <met:singlePackage>1</met:singlePackage>'+
+						'         </met:retrieveRequest>'+
+						'      </met:retrieve>'+
+						'   </soapenv:Body>'+
+						'</soapenv:Envelope>';
+		console.log( reqBody );
+		var xhr = new XMLHttpRequest();
+		xhr.open("POST", PG.baseURL + MetaData.endPoint , true);
+		xhr.setRequestHeader("Content-type","text/xml");
+		xhr.setRequestHeader("SOAPAction", "''");
+
+		xhr.onreadystatechange = function(x) {
+			if (x.currentTarget.readyState == 4 && x.currentTarget.status == 200 ) {
+				console.log(x.currentTarget.responseText)
+				var x2js = new X2JS({});
+				var res = x2js.xml_str2json(x.currentTarget.responseText);
+				console.log( res );
+				if(res.Envelope.Body.retrieveResponse.result.state == 'Queued'){
+					$('#status').html( res.Envelope.Body.retrieveResponse.result.state);
+					MetaData.retrieveStatus(res.Envelope.Body.retrieveResponse.result.id);
+				}
+			}
+		}
+		xhr.send(reqBody);
+	},
+	
+	retrieveStatus : function(id){
+		var reqBody = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:met="http://soap.sforce.com/2006/04/metadata">'+
+						'   <soapenv:Header>'+
+						'      <met:CallOptions>'+
+						'         <met:client>1</met:client>'+
+						'      </met:CallOptions>'+
+						'      <met:SessionHeader>'+
+						'         <met:sessionId>'+ PG.session +'</met:sessionId>'+
+						'      </met:SessionHeader>'+
+						'   </soapenv:Header>'+
+						'   <soapenv:Body>'+
+						'      <met:checkRetrieveStatus>'+
+						'         <met:asyncProcessId>'+ id +'</met:asyncProcessId>'+
+						'         <met:includeZip>1</met:includeZip>'+
+						'      </met:checkRetrieveStatus>'+
+						'   </soapenv:Body>'+
+						'</soapenv:Envelope>';
+		//console.log( reqBody );
+		var xhr = new XMLHttpRequest();
+		xhr.open("POST", PG.baseURL + MetaData.endPoint , true);
+		xhr.setRequestHeader("Content-type","text/xml");
+		xhr.setRequestHeader("SOAPAction", "''");
+
+		xhr.onreadystatechange = function(x) {
+			if (x.currentTarget.readyState == 4 && x.currentTarget.status == 200 ) {
+				//console.log(x.currentTarget.responseText)
+				var x2js = new X2JS({});
+				var res = x2js.xml_str2json(x.currentTarget.responseText);
+				//console.log( res );
+				if(res.Envelope.Body.checkRetrieveStatusResponse.result.status != 'Succeeded'){
+					$('#status').html( res.Envelope.Body.checkRetrieveStatusResponse.result.status);
+					window.setTimeout(function(){
+						MetaData.retrieveStatus(res.Envelope.Body.checkRetrieveStatusResponse.result.id);
+					}, 100);
+				}else if(res.Envelope.Body.checkRetrieveStatusResponse.result.status == 'Succeeded'){
+					
+					var zipFile = res.Envelope.Body.checkRetrieveStatusResponse.result.zipFile;
+					//console.log(res.Envelope.Body.checkRetrieveStatusResponse.result.zipFile);
+			
+					$('<div>Copy-Paste below CSV data or  <a href="'+ encodeURI("data:application/zip;base64," + zipFile )+'" download="' +'package.zip">click to Download</a> zipped package.</div>')
+						.prependTo( $('#output').parent() );
+						
+					var zip = new JSZip();
+					zip.load(zipFile, {'base64':true});
+						
+					document.getElementById('output').value = zip.file("package.xml").asText();
+					document.getElementById('loading').style.display = 'none';
+					$('#status').html( res.Envelope.Body.checkRetrieveStatusResponse.result.status);
+				}
+			}
+		}
+		xhr.send(reqBody);
 	}
 }
 

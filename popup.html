@@ -27,22 +27,31 @@
     </style>
 	<link href="bootstrap.min.css" rel="stylesheet" type="text/css"/>
     <script src="jquery.js"></script>
+	<script src="xml2json.min.js"></script>
+	<script src="jszip.min.js"></script>
     <script src="popup.js"></script>
   </head>
   <body style='width:700px;height:400px;'>
 	<!--form class='form-inline'-->
+	<div id='page1'>
 		<div class=''>
 			<button id='btn' class="btn btn-success" type='button' title='Goto Inbound/Outbound change set page and click.'>Package</button>
 			<button id='testcoveragebtn' class="btn btn-success" type='button' title='Click to get list of test coverage.'>Test Coverage</button>
+			<div style='display:inline-block;margin-left:10px;margin-right:10px;width:60px' id='status'></div>
 			<img id='loading' src='./ajax-loader.gif' style='margin-left:20px;display:none;'/>
+			
 		</div>
-    <div>
-		<textarea id='output' class="form-control" rows="20" cols="400">Please navigate to inbound/outbound change set detail page and click the package button.
-		
-Other hidden features.
-1. Did you notice 'Export data' button in developer console?
-2. Did you notice user profile page of chatter is skipped to navigate directly to user details?
-3. Did you notice mass FLS update button on new profile page?</textarea>
+		<div>
+			<textarea id='output' class="form-control" rows="20" cols="400">Please navigate to inbound/outbound change set detail page and click the package button.
+			
+	Other hidden features.
+	1. Did you notice 'Export data' button in developer console?
+	2. Did you notice user profile page of chatter is skipped to navigate directly to user details?
+	3. Did you notice mass FLS update button on new profile page?</textarea>
+		</div>
+	</div>
+	<div id='page2'>
+	
 	</div>
 	 <!--/form-->
   </body>
