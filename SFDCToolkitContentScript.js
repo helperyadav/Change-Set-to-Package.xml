@@ -84,31 +84,43 @@ function goToUserDetailPageDirectly(){
 function getPackage(){
   
   chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-	console.log('mssg: ' + message.param);
+	console.log('mssg: ' + message);
 	var URL = document.location.href;
-	
-	if( URL.indexOf('/033') != -1 ){
-		table = document.getElementsByClassName('list')[0];
-	}else if( URL.indexOf('changemgmt/inboundChangeSetDetailPage') != -1 ){
-		table = $('table[id$="component_list_table"]').get(0);
-	}else if( URL.indexOf('changemgmt/outboundChangeSetDetailPage') != -1 ){
-		table = $('table[id$="OutboundChangeSetComponentList"]').get(0);
+	if(message.request == 'GET_CS_NAME'){
+		var CsName = $('td.dataCol.first span[id$="outboundCs__name"]').text();
+		console.log('Cs Name: ' + CsName);
+		
+		if(CsName == undefined || CsName == ''){
+			return sendResponse({'status': 'failed', 'json':'Cant find Change set name'});
+		}else{
+			return sendResponse({'status': 'done', 'csName': CsName});
+		}
+		
 	}else{
-		sendResponse({'status': 'failed', 'json':'Please navigate to inbound/Outbound changeset and try again. If problem persists then contact bhupendrasyadav@gmail.com'});
-		return;
-	}
-
-	json = xmlToJson(table);
-	var a = $('a[id$="nextPageLink"]');
 	
-	if( a.length == 0 ){
-		sendResponse({'status': 'done', 'json':json});
-	}else
-		sendResponse({'status': 'In Progress', 'json':json});
+		if( URL.indexOf('/033') != -1 ){
+			table = document.getElementsByClassName('list')[0];
+		}else if( URL.indexOf('changemgmt/inboundChangeSetDetailPage') != -1 ){
+			table = $('table[id$="component_list_table"]').get(0);
+		}else if( URL.indexOf('changemgmt/outboundChangeSetDetailPage') != -1 ){
+			table = $('table[id$="OutboundChangeSetComponentList"]').get(0);
+		}else{
+			sendResponse({'status': 'failed', 'json':'Please navigate to inbound/Outbound changeset and try again. If problem persists then contact bhupendrasyadav@gmail.com'});
+			return;
+		}
 	
-	if( a.length != 0 ){
-		a[0].click();
-	}
+		json = xmlToJson(table);
+		var a = $('a[id$="nextPageLink"]');
+		
+		if( a.length == 0 ){
+			sendResponse({'status': 'done', 'json':json});
+		}else
+			sendResponse({'status': 'In Progress', 'json':json});
+		
+		if( a.length != 0 ){
+			a[0].click();
+		}
+  	}
   });
 }
 
@@ -235,4 +247,6 @@ var Exporter = EXP = {
 		generator.document.close();
 		return true;
 	}
-}
+	
+	
+} //EXPORTER

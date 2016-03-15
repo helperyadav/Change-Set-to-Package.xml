@@ -1,4 +1,3 @@
-
 var PG = {
 	ApexClasses : {},
 	ApexTriggers : {},
@@ -683,6 +682,8 @@ var CCP = {
 
 		document.getElementById('output').value = coverage;
 		document.getElementById('loading').style.display = 'none';
+		$('#page2').hide();
+		$('#output').show();
 	}
 }
 
@@ -777,6 +778,8 @@ var MetaData = {
 					document.getElementById('output').value = zip.file("package.xml").asText();
 					document.getElementById('loading').style.display = 'none';
 					$('#status').html( res.Envelope.Body.checkRetrieveStatusResponse.result.status);
+					$('#page2').hide();
+					$('#output').show();
 				}
 			}
 		}
@@ -784,9 +787,177 @@ var MetaData = {
 	}
 }
 
+//BigSQL
+var BQ = {
+	Id : null,
+	sObjectName: null,
+	lstFields : [],
+	data: [],
+	SOQLEndPoint : '/services/data/v35.0/query/?q=',
+	
+	initBQ : function(){
+		BQ.data = [];
+		BQ.lstFields= [];
+		BQ.mapFields = {};
+		BQ.sObjectName = null;
+		BQ.Id = PG.tab.url.match(/[\d\w]{15}/) + "";
+		BQ.getFields(BQ.Id);
+		$('#page2 table').remove();
+	},
+	
+	getFields : function(Id){
+		
+		if( Id.match(/^006/) != null ){
+			BQ.sObjectName = 'Opportunity';
+		}
+		var conn = new jsforce.Connection({
+		  serverUrl : PG.baseURL,
+		  sessionId : PG.session
+		});
+		
+		// first get sObjectType.
+		$('#status').html('Looking for sObject Name.');
+		conn.describeGlobal(function(err, res) {
+		  	if (err || res == null ) {
+			  $('#status').html('Error while fetching sObject API name.');
+			  return console.error(err); 
+			}
+			console.log(res.sobjects);
+			for(var index=0; index < res.sobjects.length; index++ ){
+				sobjectType = res.sobjects[index];
+				if( sobjectType.keyPrefix == Id.substring(0,3) ){
+					BQ.sObjectName = sobjectType.name;
+					$('#status').html('Found sObject ' + BQ.sObjectName + '...');
+					break;
+				}
+			}
+			
+			if(BQ.sObjectName != null ){
+				$('#status').html('Fetching fields API names...');
+				conn.sobject(BQ.sObjectName).describe(function(err, meta) {
+				  if (err || meta == null){
+					$('#status').html('Error wile fetching fields.')
+					return console.error(err); 
+				  }
+				  console.table(meta.fields);
+				  $('#status').html('Found total ' + meta.fields.length + ' fields.');
+				  BQ.lstFields = [];
+				  for(var index=0; index <  meta.fields.length; index++){
+					var f =  meta.fields[index];
+					if(f.type != 'address' && f.type != 'textarea' && f.name != 'LastViewedDate' && f.name != 'LastReferencedDate' && f.name != 'ContractId' ){
+						BQ.lstFields.push (f);
+						BQ.mapFields[f.name] = f;
+					}
+				  }
+				  BQ.getData();
+				});
+			}
+			
+		});
+	},
+	
+	getData : function(){
+		if(BQ.Id == null || BQ.sObjectName == null || BQ.lstFields == null ){
+			return;
+		}
+		
+		var count = 1;
+		var XHRCount = 0;
+		var divisions = Math.ceil(BQ.lstFields.length/100);
+		var divArr = [];
+		
+		for(var i=0; i < BQ.lstFields.length; i++){
+			divArr.push(BQ.lstFields[i].name);
+			if( count*10 == i || i == BQ.lstFields.length-1){
+				$('#status').html('Firing SOQL...');
+				var SQL = 'select ' + divArr.join(',')  + ' From ' + BQ.sObjectName + ' where id= ' + '\''+ BQ.Id + '\'';
+				var SQLURI = PG.baseURL + BQ.SOQLEndPoint + SQL;
+				try{
+					var xhr = new XMLHttpRequest();
+					xhr.open("GET", SQLURI , true);
+					xhr.setRequestHeader("Content-type","application/json");
+					xhr.setRequestHeader("Authorization", "Bearer " + PG.session);
+									
+					xhr.onreadystatechange = function(x) {
+						try{
+							if (x.currentTarget.readyState == 4 && x.currentTarget.status == 200 ) {
+								$('#status').html('Got response of SOQL ' + XHRCount + '...');
+								console.log(x.currentTarget.responseText);
+								var res = JSON.parse(x.currentTarget.response);
+								
+								for(var attrib in res.records[0]){
+									if( attrib != 'attributes' ){
+										BQ.data.push( {'name' : attrib, 'val' : res.records[0][attrib], 'label' : BQ.mapFields[attrib].label });
+									}
+								}
+								XHRCount--;
+								if(XHRCount==0){
+									BQ.dataLoaded();
+								}
+							}else if(x.currentTarget.readyState == 4 && x.currentTarget.status == 400){
+								XHRCount--;
+								if(XHRCount==0){
+									BQ.dataLoaded();
+								}
+							}
+						}catch(ex){
+							XHRCount--;
+							if(XHRCount==0){
+								BQ.dataLoaded();
+							}
+						}
+					}
+					xhr.send();
+				}catch(ex){
+					
+				}
+				
+				XHRCount++;
+				//reset
+				divArr = [];
+				count++;
+			}
+		}
+		
+			
+	},
+	
+	dataLoaded : function(){
+		var d = [];
+		$('#status').html('Loading data in table...');
+						
+		if(BQ.data.length > 0 ){
+			for(var i=0; i < BQ.data.length; i++){
+				d.push( '<tr><td>' + BQ.data[i].label + '</td><td class="fieldAPIName" APIName="' + BQ.data[i].name + '">' + BQ.data[i].name + '</td><td>' + BQ.data[i].val + '</td></tr>');
+			}
+			document.getElementById('output').value = d.join('\n');
+			$('<table style="margin:10px;" id="dataTble" class="table-bordered"><tr><th>Field Label</th><th>Field Name</th><th>value</th></tr></table>').append(d.join('')).appendTo('#page2');
+			$('#page2').show();
+			$('#output').hide();
+			$('#status').html('Done...');
+		}
+	},
+	
+	search : function(evt){
+		var searchText = $('#search').val();
+		if(searchText.length > 1){
+			$('#dataTble td.fieldAPIName').each(function(){
+				if($(this).text().toLowerCase().indexOf(searchText.toLowerCase()) == -1 ){
+					$(this).parent().hide();
+				}else{
+					$(this).parent().show();
+				}
+			});
+		}else{
+			$('#dataTble td.fieldAPIName').parent().show();
+		}
+	}
+}//BQ end
+
 document.addEventListener('DOMContentLoaded', function () {
   PG.init();
   document.getElementById('btn').addEventListener('click', PG.packageHandler );
   document.getElementById('testcoveragebtn').addEventListener( 'click', CCP.handleGetCoverage );
-  
+  document.getElementById('BigQuery').addEventListener( 'click', BQ.initBQ );
+  document.getElementById('search').addEventListener( 'keyup', BQ.search );
 });

@@ -29,7 +29,9 @@
     <script src="jquery.js"></script>
 	<script src="xml2json.min.js"></script>
 	<script src="jszip.min.js"></script>
-    <script src="popup.js"></script>
+    <script src="jsforce.min.js"></script>
+	<script src="popup.js"></script>
+	
   </head>
   <body style='width:700px;height:400px;'>
 	<!--form class='form-inline'-->
@@ -37,7 +39,9 @@
 		<div class=''>
 			<button id='btn' class="btn btn-success" type='button' title='Goto Inbound/Outbound change set page and click.'>Package</button>
 			<button id='testcoveragebtn' class="btn btn-success" type='button' title='Click to get list of test coverage.'>Test Coverage</button>
-			<div style='display:inline-block;margin-left:10px;margin-right:10px;width:60px' id='status'></div>
+			<button id='BigQuery' class="btn btn-success" type='button' title='BigQuery'>BigQuery</button>
+			
+			<div style='display:inline-block;margin-left:10px;margin-right:10px;width:200px' id='status'></div>
 			<img id='loading' src='./ajax-loader.gif' style='margin-left:20px;display:none;'/>
 			
 		</div>
@@ -50,8 +54,14 @@
 	3. Did you notice mass FLS update button on new profile page?</textarea>
 		</div>
 	</div>
-	<div id='page2'>
-	
+	<div id='page2' style="overflow:scroll;display:none;width:700px;height:400px">
+		<div>
+			<form>
+				<div class="form-group">
+					<input type="text" class="form-control" id="search" placeholder="Search any field" style="margin:5px;"></input>
+				</div>
+			</form>
+		</div>
 	</div>
 	 <!--/form-->
   </body>

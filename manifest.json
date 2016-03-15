@@ -1,7 +1,7 @@
 {
   "name": "SFDC Magic Toolkit",
-  "description": "Toolkit provides Package.xml out of change sets. Test coverage export functionality. Fast navigation to User detail.",
-  "version": "1.0.9",
+  "description": "Toolkit provides Package.xml out of change sets. Test coverage export functionality. Fast navigation to User detail. Big Query.",
+  "version": "1.1.0",
   "permissions": [
 		"cookies", 
 		"tabs", 
