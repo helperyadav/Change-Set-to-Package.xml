@@ -800,7 +800,17 @@ var BQ = {
 		BQ.lstFields= [];
 		BQ.mapFields = {};
 		BQ.sObjectName = null;
+		
 		BQ.Id = PG.tab.url.match(/[\d\w]{15}/) + "";
+		if(BQ.Id == null || BQ.Id == undefined || BQ.Id == "" || BQ.Id == "null"){
+			document.getElementById('output').value = 'Please navigate to any record\'s detail/edit page in salesforce.';
+			return;
+		}
+		
+		if(PG.baseURL.indexOf('visual.force.com') != -1){
+			document.getElementById('output').value = 'Please navigate to any record\'s detail/edit page in Salesforce.com, currently you are on visual.force.com.';
+			return;
+		}
 		BQ.getFields(BQ.Id);
 		$('#page2 table').remove();
 	},
@@ -851,6 +861,8 @@ var BQ = {
 				  }
 				  BQ.getData();
 				});
+			}else{
+				document.getElementById('output').value = 'Please navigate to any record\'s detail/edit page in salesforce.';
 			}
 			
 		});

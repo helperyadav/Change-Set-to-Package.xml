@@ -14,7 +14,7 @@
       "matches": [	"https://*.salesforce.com/*",
 					"https://*.visual.force.com/*"
 				],
-      "js": [ "jquery.js","SFDCToolkitContentScript.js"]
+      "js": [ "js/jquery.js","js/SFDCToolkitContentScript.js"]
     }
   ],
   "browser_action": {
